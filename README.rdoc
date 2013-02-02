@@ -64,6 +64,13 @@ Outputs a list of all available images available to the currently configured vcl
 
 Outputs a list of all available networks to the currently configured vcloud Cloud account. A network can be a Org or vApp level network. This data can be useful when choosing a network id to pass to the <tt>knife vcloud server create</tt> subcommand.
 
+= TODOS:
+
+1. Support for multiple VMs in a vApp.
+2. Support for multiple networks for a single vAPP.
+3. Support NAT-enabled Networks.
+4. Integration/Unit Tests for all functionality
+
 
 = LICENSE:
 
