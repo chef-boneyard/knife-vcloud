@@ -1,5 +1,36 @@
 *.gem
-.bundle
 .rvmrc
 Gemfile.lock
 pkg/*
+.rake_tasks~
+tags
+coverage
+rdoc
+test/tmp
+test/version_tmp
+tmp
+pkg
+*.rbc
+lib/bundler/man
+spec/reports
+.config
+InstalledFiles
+.bundle
+
+# YARD artifacts
+.yardoc
+_yardoc
+doc/
+
+.DS_Store
+Icon?
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+*.swp
+*.swo

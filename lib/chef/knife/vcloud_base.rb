@@ -47,7 +47,6 @@ class Chef
            :description => "The vCloud API endpoint",
            :proc => Proc.new { |u| Chef::Config[:knife][:vcloud_host] = u }
 
-
           option :verify_ssl_cert,
               :long => "--verify-ssl-cert",
               :description => "Verify SSL Certificates",
@@ -91,8 +90,6 @@ class Chef
       end
 
       def validate!(keys=[:vcloud_username, :vcloud_password, :vcloud_host])
-        errors = []
-
         keys.each do |k|
           pretty_key = k.to_s.gsub(/_/, ' ').gsub(/\w+/){ |w| (w =~ /(ssh)|(aws)/i) ? w.upcase  : w.capitalize }
           if locate_config_value(k).nil?

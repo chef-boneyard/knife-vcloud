@@ -175,6 +175,7 @@ class Chef
         memory = locate_config_value(:memory)
         password = locate_config_value(:ssh_password) || locate_config_value(:winrm_password)
 
+
         server_spec = {
             :name =>  locate_config_value(:chef_node_name)
         }
@@ -272,7 +273,6 @@ class Chef
           }
           bootstrap_for_node(server, public_ip_address).run
         end
-
       end
 
       def validate!
@@ -307,7 +307,6 @@ class Chef
         Chef::Config[:knife][:hints]['vcloud'] ||= {}
         bootstrap
       end
-
 
       def bootstrap_for_node(name, fqdn)
         bootstrap = Chef::Knife::Bootstrap.new
