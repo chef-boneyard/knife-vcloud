@@ -41,11 +41,11 @@ class Chef
             :description => "Your VCloud username",
             :proc => Proc.new { |username| Chef::Config[:knife][:vcloud_username] = username }
 
-          option :vcloud_url,
-           :short => "-U URL",
-           :long => "--vcloud-url URL",
-           :description => "The vCloud API endpoint URL",
-           :proc => Proc.new { |u| Chef::Config[:knife][:vcloud_url] = u }
+          option :vcloud_host,
+           :short => "-U HOST",
+           :long => "--vcloud-host HOST",
+           :description => "The vCloud API endpoint",
+           :proc => Proc.new { |u| Chef::Config[:knife][:vcloud_host] = u }
 
 
           option :verify_ssl_cert,
@@ -61,14 +61,14 @@ class Chef
       def connection
         Chef::Log.debug("vcloud_username #{locate_config_value(:vcloud_username)}")
         Chef::Log.debug("vcloud_password #{locate_config_value(:vcloud_password)}")
-        Chef::Log.debug("vcloud_uri #{locate_config_value(:vcloud_uri)}")
+        Chef::Log.debug("vcloud_host #{locate_config_value(:vcloud_host)}")
         Chef::Log.debug("verify_ssl_cert #{locate_config_value(:verify_ssl_cert)}")
 
         @connection ||= begin
           connection = Fog::Vcloud::Compute.new(
             :vcloud_username => locate_config_value(:vcloud_username),
             :vcloud_password => locate_config_value(:vcloud_password),
-            :vcloud_host => locate_config_value(:vcloud_url),
+            :vcloud_host => locate_config_value(:vcloud_host),
             :vcloud_version => '1.5',
             :connection_options => {
               :ssl_verify_peer=>locate_config_value(:verify_ssl_cert),
@@ -90,7 +90,7 @@ class Chef
         end
       end
 
-      def validate!(keys=[:vcloud_username, :vcloud_password, :vcloud_url])
+      def validate!(keys=[:vcloud_username, :vcloud_password, :vcloud_host])
         errors = []
 
         keys.each do |k|

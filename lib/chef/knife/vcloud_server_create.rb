@@ -18,16 +18,23 @@ require 'fog'
 require 'chef/knife/vcloud_base'
 require 'highline'
 require 'chef/knife'
+require 'chef/knife/winrm_base'
+require 'winrm'
+require 'em-winrm'
 
 class Chef
   class Knife
     class VcloudServerCreate < Knife
 
       include Knife::VcloudBase
+      include Chef::Knife::WinrmBase
 
       deps do
         require 'chef/json_compat'
         require 'chef/knife/bootstrap'
+        require 'chef/knife/bootstrap_windows_winrm'
+        require 'chef/knife/core/windows_bootstrap_context'
+        require 'chef/knife/winrm'
         Chef::Knife::Bootstrap.load_deps
       end
 
@@ -82,11 +89,27 @@ class Chef
         :proc => Proc.new { |network| Chef::Config[:knife][:vcloud_network] = network }
 
       option :ssh_password,
-          :short => "-p PASSWORD",
-          :long => "--password PASSWORD",
-          :description => "SSH Password for the user",
-          :proc => Proc.new { |password| Chef::Config[:knife][:ssh_password] = password }
+        :short => "-p PASSWORD",
+        :long => "--password PASSWORD",
+        :description => "SSH Password for the user",
+        :proc => Proc.new { |password| Chef::Config[:knife][:ssh_password] = password }
 
+      option :no_bootstrap,
+        :long => "--no-bootstrap",
+        :description => "Disable Chef bootstrap",
+        :boolean => true,
+        :proc => Proc.new { |v| Chef::Config[:knife][:no_bootstrap] = v },
+        :default => false
+
+      option :bootstrap_protocol,
+        :long => "--bootstrap-protocol protocol",
+        :description => "Protocol to bootstrap windows servers. options: winrm",
+        :default => nil
+
+      option :bootstrap_proxy,
+        :long => "--bootstrap-proxy PROXY_URL",
+        :description => "The proxy server for the node being bootstrapped",
+        :proc => Proc.new { |v| Chef::Config[:knife][:bootstrap_proxy] = v }
 
       def h
         @highline ||= HighLine.new
@@ -122,23 +145,47 @@ class Chef
         tcp_socket && tcp_socket.close
       end
 
+      def tcp_test_winrm(hostname, port)
+        TCPSocket.new(hostname, port)
+        yield
+        true
+      rescue SocketError
+        sleep 2
+        false
+      rescue Errno::ETIMEDOUT
+        false
+      rescue Errno::EPERM
+        false
+      rescue Errno::ECONNREFUSED
+        sleep 2
+        false
+      rescue Errno::EHOSTUNREACH
+        sleep 2
+        false
+      rescue Errno::ENETUNREACH
+        sleep 2
+        false
+      end
+
       def run
         $stdout.sync = true
         validate!
 
         vcpus = locate_config_value(:vcpus)
         memory = locate_config_value(:memory)
-        password = locate_config_value(:ssh_password)
+        password = locate_config_value(:ssh_password) || locate_config_value(:winrm_password)
 
         server_spec = {
             :name =>  locate_config_value(:chef_node_name)
         }
+        password_enabled_template = false
         catalog = connection.catalogs.each do |catalog|
             catalog_items = catalog.catalog_items
             catalog = catalog_items.find{|catalog_item|
               catalog_item.href.scan(locate_config_value(:image)).size > 0 }
             if catalog
                 server_spec[:catalog_item_uri] = catalog.href
+                password_enabled_template = catalog.password_enabled?
                 break
             end
         end
@@ -155,6 +202,12 @@ class Chef
         end
         server_spec[:network_uri] = network.href
 
+        vapp_password_set = false
+        if password_enabled_template
+          vapp_password_set = true
+          server_spec[:password] = password
+        end
+
         vapp = connection.servers.create(server_spec)
         print "Instantiating Server(vApp) named #{h.color(vapp.name, :bold)} with id #{h.color(vapp.href.split('/').last.to_s, :bold)}"
         print "\n#{ui.color("Waiting for server to be Instantiated", :magenta)}"
@@ -168,9 +221,11 @@ class Chef
         #Fetch the associated VM information for further configuration
         server = connection.get_server(vapp.children[:href])
         server.network={:network_name => network.name, :network_mode => "POOL" }
-        server.password
-        server.password = password
-        server.save
+        if !vapp_password_set
+          server.password
+          server.password = password
+          server.save
+        end
 
         print "\n#{ui.color("Configuring the server as required", :magenta)}"
         if not vcpus.nil?
@@ -198,19 +253,61 @@ class Chef
         public_ip_address = server.network[:IpAddress]
         puts "#{ui.color("Server Public IP Address", :cyan)}: #{public_ip_address}"
         puts "#{ui.color("Server Password", :cyan)}: #{server.password}"
-        print "\n#{ui.color("Waiting for sshd.", :magenta)}"
         puts("\n")
-        print(".") until tcp_test_ssh(public_ip_address, "22") { sleep @initial_sleep_delay ||= 10; puts("done") }
-        puts "\nBootstrapping #{h.color(server.name, :bold)}..."
-        bootstrap_for_node(server.name, public_ip_address).run
+
+        return if locate_config_value(:no_bootstrap)
+
+        if locate_config_value(:bootstrap_protocol) == 'winrm'
+          print "\n#{ui.color("Waiting for winrm", :magenta)}"
+          print(".") until tcp_test_winrm(public_ip_address, locate_config_value(:winrm_port)) {
+            sleep @initial_sleep_delay ||= 10
+            puts("done")
+          }
+          bootstrap_for_windows_node(server, public_ip_address).run
+        else
+          print "\n#{ui.color("Waiting for sshd", :magenta)}"
+          print(".") until tcp_test_ssh(public_ip_address) {
+            sleep @initial_sleep_delay ||= 10
+            puts("done")
+          }
+          bootstrap_for_node(server, public_ip_address).run
+        end
+
       end
 
       def validate!
         super([
-          :vcloud_username, :vcloud_password, :vcloud_url,
-          :chef_node_name, :image, :vcloud_network, :ssh_password
+          :vcloud_username, :vcloud_password, :vcloud_host,
+          :chef_node_name, :image, :vcloud_network
         ])
       end
+      def bootstrap_for_windows_node(server, bootstrap_ip_address)
+        bootstrap = Chef::Knife::BootstrapWindowsWinrm.new
+        bootstrap.name_args = [bootstrap_ip_address]
+        bootstrap.config[:winrm_user] = locate_config_value(:winrm_user) || 'Administrator'
+        bootstrap.config[:winrm_password] = locate_config_value(:winrm_password)
+        bootstrap.config[:winrm_transport] = locate_config_value(:winrm_transport)
+        bootstrap.config[:winrm_port] = locate_config_value(:winrm_port)
+        bootstrap_common_params(bootstrap, server.name)
+      end
+
+      def bootstrap_common_params(bootstrap, server_name)
+        bootstrap.config[:chef_node_name] = config[:chef_node_name] || server_name
+        bootstrap.config[:run_list] = config[:run_list]
+        bootstrap.config[:prerelease] = config[:prerelease]
+        bootstrap.config[:bootstrap_version] = locate_config_value(:bootstrap_version)
+        bootstrap.config[:distro] = locate_config_value(:distro)
+        bootstrap.config[:template_file] = locate_config_value(:template_file)
+        bootstrap.config[:bootstrap_proxy] = locate_config_value(:bootstrap_proxy)
+        bootstrap.config[:environment] = config[:environment]
+        bootstrap.config[:encrypted_data_bag_secret] = config[:encrypted_data_bag_secret]
+        bootstrap.config[:encrypted_data_bag_secret_file] = config[:encrypted_data_bag_secret_file]
+        # let ohai know we're using vCD
+        Chef::Config[:knife][:hints] ||= {}
+        Chef::Config[:knife][:hints]['vcloud'] ||= {}
+        bootstrap
+      end
+
 
       def bootstrap_for_node(name, fqdn)
         bootstrap = Chef::Knife::Bootstrap.new

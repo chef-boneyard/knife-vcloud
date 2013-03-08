@@ -24,15 +24,15 @@ In order to communicate with the vcloud Cloud API you will have to tell Knife ab
 
     knife[:vcloud_username] = "Your vcloud Account Username"
     knife[:vcloud_password] = "Your vcloud Account Password"
-    knife[:vcloud_url] = "Your vcloud Server URL"
+    knife[:vcloud_host] = "Your vcloud Server"
 
 You also have the option of passing your vcloud Username/Password into the individual knife subcommands using the <tt>-A</tt> (or <tt>--vcloud-username</tt>) <tt>-K</tt> (or <tt>--vcloud-password</tt>) command options
 
     # provision a new 2 Core 1GB Ubuntu 10.04 webserver
     knife vcloud server create --vcpus 2 -m 1024 -I <Template_ID> -A 'Your vcloud Username' -K "Your vcloud Password" -r 'role[webserver]' --network <Network_ID>
 
-    # provision a new 2 Core 1GB Ubuntu 10.04 webserver with Firewall Rules
-    knife vcloud server create --vcpus 2 -m 1024 -I <Template_ID> -A 'Your vcloud Username' -K "Your vcloud Password" -r 'role[webserver]' --network <Network_ID>
+    # provision a new Windows 2008 R2 Server with WinRM enabled:
+    knife vcloud server create -I <Windows_Template_ID> -A 'Your vcloud Username' -K "Your vcloud Password" --network <Network_ID> --bootstrap-protocol winrm
 
 Additionally the following options may be set in your `knife.rb`:
 
