@@ -18,9 +18,7 @@ require 'fog'
 require 'chef/knife/vcloud_base'
 require 'highline'
 require 'chef/knife'
-require 'chef/knife/winrm_base'
-require 'winrm'
-require 'em-winrm'
+
 
 class Chef
   class Knife
@@ -30,6 +28,9 @@ class Chef
       include Chef::Knife::WinrmBase
 
       deps do
+        require 'chef/knife/winrm_base'
+        require 'winrm'
+        require 'em-winrm'
         require 'chef/json_compat'
         require 'chef/knife/bootstrap'
         require 'chef/knife/bootstrap_windows_winrm'
@@ -177,24 +178,26 @@ class Chef
 
 
         server_spec = {
-            :name =>  locate_config_value(:chef_node_name)
+            :name =>  locate_config_value(:chef_node_name),
+            :catalog_item_uri => nil,
+            :password => nil,
+            :network_uri => nil
         }
         password_enabled_template = false
-        catalog = connection.catalogs.each do |catalog|
-            catalog_items = catalog.catalog_items
-            catalog = catalog_items.find{|catalog_item|
-              catalog_item.href.scan(locate_config_value(:image)).size > 0 }
-            if catalog
-                server_spec[:catalog_item_uri] = catalog.href
-                password_enabled_template = catalog.password_enabled?
-                break
+        connection.catalogs.each do |catalog|
+            catalog_item = catalog.catalog_items.find{|item| item.href.include?(locate_config_value(:image)) }
+            if catalog_item
+              server_spec[:catalog_item_uri] = catalog_item.href
+              server_spec[:password] = password if catalog_item.password_enabled?
+              break
             end
         end
 
         if server_spec[:catalog_item_uri].nil?
-            ui.error("Cannot find Image in the Catalog: #{image}")
+            ui.error("Cannot find Image in the Catalog: #{locate_config_value(:image)}")
             exit 1
         end
+        puts "Ready to identify the network"
 
         network = connection.networks.all.find {|n|
           n.href.scan(locate_config_value(:vcloud_network)).size > 0 }
@@ -203,12 +206,13 @@ class Chef
         end
         server_spec[:network_uri] = network.href
 
-        vapp_password_set = false
-        if password_enabled_template
-          vapp_password_set = true
-          server_spec[:password] = password
-        end
+        # vapp_password_set = false
+        # if password_enabled_template
+        #   vapp_password_set = true
+        #   server_spec[:password] = password
+        # end
 
+        puts "Ready to create vApp - spec #{server_spec}"
         vapp = connection.servers.create(server_spec)
         print "Instantiating Server(vApp) named #{h.color(vapp.name, :bold)} with id #{h.color(vapp.href.split('/').last.to_s, :bold)}"
         print "\n#{ui.color("Waiting for server to be Instantiated", :magenta)}"
@@ -222,7 +226,7 @@ class Chef
         #Fetch the associated VM information for further configuration
         server = connection.get_server(vapp.children[:href])
         server.network={:network_name => network.name, :network_mode => "POOL" }
-        if !vapp_password_set
+        if server_spec[:password].nil?
           server.password
           server.password = password
           server.save
