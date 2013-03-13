@@ -13,10 +13,8 @@ Be sure you are running the latest version Chef. Versions earlier than 0.10.0 do
 Depending on your system's configuration, you may need to run this command with root privileges.
 
 == NOTE:
-This plugin is under developmant and not distributed as a Ruby Gem. It depends on a forked git branch of fog.
+This plugin is under developmant and not distributed as a Ruby Gem. It depends on the git source of fog.
 Please use the bundler to use this plugin until the Ruby Gem is released
-
-
 
 = CONFIGURATION:
 
