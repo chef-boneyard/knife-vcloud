@@ -90,8 +90,7 @@ class Chef
         :proc => Proc.new { |network| Chef::Config[:knife][:vcloud_network] = network }
 
       option :ssh_password,
-        :short => "-p PASSWORD",
-        :long => "--password PASSWORD",
+        :long => "--ssh-password PASSWORD",
         :description => "SSH Password for the user",
         :proc => Proc.new { |password| Chef::Config[:knife][:ssh_password] = password }
 
@@ -170,12 +169,11 @@ class Chef
 
       def run
         $stdout.sync = true
-        validate!
 
         vcpus = locate_config_value(:vcpus)
         memory = locate_config_value(:memory)
-        password = locate_config_value(:ssh_password) || locate_config_value(:winrm_password)
-
+        config[:password] = locate_config_value(:ssh_password) || locate_config_value(:winrm_password)
+        validate!
 
         server_spec = {
             :name =>  locate_config_value(:chef_node_name),
@@ -188,7 +186,7 @@ class Chef
             catalog_item = catalog.catalog_items.find{|item| item.href.include?(locate_config_value(:image)) }
             if catalog_item
               server_spec[:catalog_item_uri] = catalog_item.href
-              server_spec[:password] = password if catalog_item.password_enabled?
+              server_spec[:password] = config[:password] if catalog_item.password_enabled?
               break
             end
         end
@@ -197,22 +195,16 @@ class Chef
             ui.error("Cannot find Image in the Catalog: #{locate_config_value(:image)}")
             exit 1
         end
-        puts "Ready to identify the network"
 
         network = connection.networks.all.find {|n|
           n.href.scan(locate_config_value(:vcloud_network)).size > 0 }
         if network.nil?
           ui.error("Cannot find network : #{locate_config_value(:vcloud_network)}")
+          exit 1
         end
         server_spec[:network_uri] = network.href
 
-        # vapp_password_set = false
-        # if password_enabled_template
-        #   vapp_password_set = true
-        #   server_spec[:password] = password
-        # end
-
-        puts "Ready to create vApp - spec #{server_spec}"
+        Chef::Log.debug("Ready to create vApp - spec #{server_spec}")
         vapp = connection.servers.create(server_spec)
         print "Instantiating Server(vApp) named #{h.color(vapp.name, :bold)} with id #{h.color(vapp.href.split('/').last.to_s, :bold)}"
         print "\n#{ui.color("Waiting for server to be Instantiated", :magenta)}"
@@ -226,9 +218,12 @@ class Chef
         #Fetch the associated VM information for further configuration
         server = connection.get_server(vapp.children[:href])
         server.network={:network_name => network.name, :network_mode => "POOL" }
+        server.save
+
         if server_spec[:password].nil?
+          Chef::Log.debug("setting the VM password to #{config[:password]}")
           server.password
-          server.password = password
+          server.password = config[:password]
           server.save
         end
 
@@ -260,7 +255,12 @@ class Chef
         puts "#{ui.color("Server Password", :cyan)}: #{server.password}"
         puts("\n")
 
-        return if locate_config_value(:no_bootstrap)
+        Chef::Log.info("Successfully provisioned vapp")
+        if locate_config_value(:no_bootstrap)
+          Chef::Log.info("No bootstrapping. Exiting")
+          exit 0
+        end
+
 
         if locate_config_value(:bootstrap_protocol) == 'winrm'
           print "\n#{ui.color("Waiting for winrm", :magenta)}"
@@ -282,7 +282,7 @@ class Chef
       def validate!
         super([
           :vcloud_username, :vcloud_password, :vcloud_host,
-          :chef_node_name, :image, :vcloud_network
+          :chef_node_name, :image, :vcloud_network, :password
         ])
       end
       def bootstrap_for_windows_node(server, bootstrap_ip_address)
