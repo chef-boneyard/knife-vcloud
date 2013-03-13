@@ -80,12 +80,14 @@ class Chef
             next
           end
           confirm("Do you really want to delete this server #{vapp.name} ")
+          vapp.wait_for { ready? }
           if vapp.friendly_status != 'off'
             ui.warn("Turning off vapp #{vapp.name}")
             connection.undeploy(vapp.href)
             vapp.wait_for { ready? }
           end
           puts "Delete Stopped server"
+          vapp.wait_for { ready? }
           connection.delete_vapp(vapp.href)
 
           ui.warn("Successfully Deleted server #{vapp.name}")
