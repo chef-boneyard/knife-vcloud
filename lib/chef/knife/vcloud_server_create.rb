@@ -181,7 +181,6 @@ class Chef
             :password => nil,
             :network_uri => nil
         }
-        password_enabled_template = false
         connection.catalogs.each do |catalog|
             catalog_item = catalog.catalog_items.find{|item| item.href.include?(locate_config_value(:image)) }
             if catalog_item
@@ -261,7 +260,6 @@ class Chef
           exit 0
         end
 
-
         if locate_config_value(:bootstrap_protocol) == 'winrm'
           print "\n#{ui.color("Waiting for winrm", :magenta)}"
           print(".") until tcp_test_winrm(public_ip_address, locate_config_value(:winrm_port)) {
@@ -285,18 +283,19 @@ class Chef
           :chef_node_name, :image, :vcloud_network, :password
         ])
       end
-      def bootstrap_for_windows_node(server, bootstrap_ip_address)
+
+      def bootstrap_for_windows_node(server, fqdn)
         bootstrap = Chef::Knife::BootstrapWindowsWinrm.new
-        bootstrap.name_args = [bootstrap_ip_address]
+        bootstrap.name_args = [fqdn]
         bootstrap.config[:winrm_user] = locate_config_value(:winrm_user) || 'Administrator'
         bootstrap.config[:winrm_password] = locate_config_value(:winrm_password)
         bootstrap.config[:winrm_transport] = locate_config_value(:winrm_transport)
         bootstrap.config[:winrm_port] = locate_config_value(:winrm_port)
-        bootstrap_common_params(bootstrap, server.name)
+        bootstrap.config[:chef_node_name] = locate_config_value(:chef_node_name) || server.name
+        bootstrap_common_params(bootstrap)
       end
 
-      def bootstrap_common_params(bootstrap, server_name)
-        bootstrap.config[:chef_node_name] = config[:chef_node_name] || server_name
+      def bootstrap_common_params(bootstrap)
         bootstrap.config[:run_list] = config[:run_list]
         bootstrap.config[:prerelease] = config[:prerelease]
         bootstrap.config[:bootstrap_version] = locate_config_value(:bootstrap_version)
@@ -312,18 +311,14 @@ class Chef
         bootstrap
       end
 
-      def bootstrap_for_node(name, fqdn)
+      def bootstrap_for_node(server, fqdn)
         bootstrap = Chef::Knife::Bootstrap.new
         bootstrap.name_args = [fqdn]
-        bootstrap.config[:run_list] = locate_config_value(:run_list)
-        bootstrap.config[:ssh_user] = "root"
+        bootstrap.config[:ssh_user] = locate_config_value(:ssh_user) || "root"
         bootstrap.config[:ssh_password] = locate_config_value(:ssh_password)
-        bootstrap.config[:chef_node_name] = locate_config_value(:chef_node_name) || name
-        bootstrap.config[:distro] = locate_config_value(:distro)
-        bootstrap.config[:bootstrap_version] = locate_config_value(:bootstrap_version)
-        bootstrap.config[:use_sudo] = false
-        bootstrap.config[:template_file] = locate_config_value(:template_file)
-        bootstrap
+        bootstrap.config[:chef_node_name] = locate_config_value(:chef_node_name) || server.name
+        bootstrap.config[:use_sudo] = true unless locate_config_value(:ssh_user) == 'root'
+        bootstrap_common_params(bootstrap)
       end
     end
   end
