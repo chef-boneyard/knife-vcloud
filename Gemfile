@@ -5,3 +5,7 @@ gem "knife-windows"
 gem "chef"
 
 gemspec
+
+group :development do
+  gem 'rspec', '>= 2.7.0'
+end 
