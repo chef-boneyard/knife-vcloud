@@ -37,6 +37,8 @@ describe Chef::Knife::VcloudServerCreate do
     }.each do |key, value|
       @knife_vcloud_create.config[key] = value
     end
+    @knife_vcloud_create.stub!(:puts)
+    @knife_vcloud_create.stub!(:print)
 
     @vcloud_connection = mock(Fog::Vcloud::Compute)
     @catalog_items = [double(:href => "image", :password_enabled? => true)]
@@ -57,6 +59,7 @@ describe Chef::Knife::VcloudServerCreate do
 
   describe "run" do
     before do
+      Fog::Vcloud::Compute.should_receive(:new).and_return(@vcloud_connection)
       @vcloud_connection.should_receive(:servers).and_return { @vcloud_vapps }
       @vcloud_vapps.should_receive(:create).and_return { @new_vapp }
       @new_vapp.should_receive(:wait_for)
@@ -68,8 +71,8 @@ describe Chef::Knife::VcloudServerCreate do
     end
 
     it "creates an vapp and bootstrap it" do
+      # Fog::Vcloud::Compute.should_receive(:new).and_return(@vcloud_connection)
       @new_server.should_receive(:save)
-      Fog::Vcloud::Compute.should_receive(:new).and_return(@vcloud_connection)
       @bootstrap = Chef::Knife::Bootstrap.new
       Chef::Knife::Bootstrap.stub!(:new).and_return(@bootstrap)
       @bootstrap.should_receive(:run)
@@ -77,9 +80,9 @@ describe Chef::Knife::VcloudServerCreate do
     end
 
     it "creates an vapp with non-default CPU/Memory" do
+      # Fog::Vcloud::Compute.should_receive(:new).and_return(@vcloud_connection)
       @new_network = {:IpAddress => "IpAddress"}
       @new_server.stub(:network).and_return(@new_network)
-      Fog::Vcloud::Compute.should_receive(:new).and_return(@vcloud_connection)
       @knife_vcloud_create.config[:vcpus] = 'vcpus'
       @knife_vcloud_create.config[:memory] = 'memory'
       @new_server.should_receive(:cpus=).and_return(@new_server.cpus)
@@ -87,14 +90,14 @@ describe Chef::Knife::VcloudServerCreate do
       @new_server.should_receive(:save).exactly(3).times
 
       @bootstrap = Chef::Knife::Bootstrap.new
-      Chef::Knife::Bootstrap.stub!(:new).and_return(@bootstrap)
+      Chef::Knife::Bootstrap.stub(:new).and_return(@bootstrap)
       @bootstrap.should_receive(:run)
       @knife_vcloud_create.run
     end
 
     it "should bootstrap windows when bootstrap protocol is winrm" do
+      # Fog::Vcloud::Compute.should_receive(:new).and_return(@vcloud_connection)
       @new_server.should_receive(:save)
-      Fog::Vcloud::Compute.should_receive(:new).and_return(@vcloud_connection)
       @knife_vcloud_create.config[:bootstrap_protocol] = 'winrm'
       @bootstrap = Chef::Knife::BootstrapWindowsWinrm.new
       Chef::Knife::BootstrapWindowsWinrm.stub(:new).and_return(@bootstrap)
@@ -103,8 +106,8 @@ describe Chef::Knife::VcloudServerCreate do
     end
 
     it "should set the password on server if the image is not password enabled" do
+      Fog::Vcloud::Compute.stub(:new).and_return(@vcloud_connection)
       @catalog_items[0] =double(:href => "image", :password_enabled? => false)
-      Fog::Vcloud::Compute.should_receive(:new).and_return(@vcloud_connection)
       @new_network = {:IpAddress => "IpAddress"}
       @new_server.stub(:network).and_return(@new_network)
       @new_server.should_receive(:password=)
@@ -114,8 +117,31 @@ describe Chef::Knife::VcloudServerCreate do
       @bootstrap.should_receive(:run)
       @knife_vcloud_create.run
     end
-  end
 
+    it "should not bootstrap when no_bootstrap set" do
+      Fog::Vcloud::Compute.stub(:new).and_return(@vcloud_connection)
+      @new_server.should_receive(:save)
+      @knife_vcloud_create.config[:no_bootstrap] = true
+      @bootstrap = Chef::Knife::Bootstrap.new
+      @bootstrap.should_not_receive(:run)
+      lambda  { @knife_vcloud_create.run }.should raise_error SystemExit
+    end
+
+  end
+  describe "run" do
+    before do
+      @knife_vcloud_create.ui.stub(:error)
+    end
+    it 'should fail if compulsory params - image are not set' do
+      @knife_vcloud_create.config[:image] = nil
+      lambda  { @knife_vcloud_create.run }.should raise_error SystemExit
+    end
+    it 'should fail if compulsory params - network are not set' do
+      @knife_vcloud_create.config[:vcloud_network] = nil
+      lambda  { @knife_vcloud_create.run }.should raise_error SystemExit
+    end
+
+  end
   describe "when configuring the bootstrap process" do
     before do
       @knife_vcloud_create.config[:ssh_user] = "ubuntu"
