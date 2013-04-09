@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.require_path = 'lib'
   s.files = %w(LICENSE README.rdoc) + Dir.glob("lib/**/*")
 
-#  s.add_dependency "fog", "> 1.10.0"
-#  s.add_dependency "chef", ">= 10.10"
-#  s.add_dependency "knife-windows"
+  s.add_dependency "fog", ">= 1.10.1"
+  s.add_dependency "chef", ">= 10.10"
+  s.add_dependency "knife-windows"
 end
