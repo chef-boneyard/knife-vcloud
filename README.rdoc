@@ -20,9 +20,12 @@ Please use the bundler to use this plugin until the Ruby Gem is released
 
 In order to communicate with the vcloud Cloud API you will have to tell Knife about your Username and API Key. The easiest way to accomplish this is to create some entries in your <tt>knife.rb</tt> file:
 
-    knife[:vcloud_username] = "Your vcloud Account Username"
-    knife[:vcloud_password] = "Your vcloud Account Password"
-    knife[:vcloud_host] = "Your vcloud Server"
+    knife[:vcloud_username] = "Your vCloud Account Username"
+    knife[:vcloud_password] = "Your vCloud Account Password"
+    knife[:vcloud_host] = "Your vCloud Server"
+
+The vcloud_username typically has the format: <user-name>@<vcloud-organization-name> eg. 'MyUser@MyvCloudOrg' . The vcloud_host is the IP or FQDN of VMware vCloud Director. eg 'zone01.myvcloud.com'. This information can be extracted from the vCloud portal URL which has the following format: http(s)://<vcloud-host>/cloud/org/<vcloud-organization-name>
+
 
 You also have the option of passing your vcloud Username/Password into the individual knife subcommands using the <tt>-A</tt> (or <tt>--vcloud-username</tt>) <tt>-K</tt> (or <tt>--vcloud-password</tt>) command options
 
@@ -32,9 +35,10 @@ You also have the option of passing your vcloud Username/Password into the indiv
     # provision a new Windows 2008 R2 Server with WinRM enabled:
     knife vcloud server create -I <Windows_Template_ID> -A 'Your vcloud Username' -K "Your vcloud Password" --network <Network_ID> --bootstrap-protocol winrm
 
+The network ID and template ID can viewed via their respective list commands i.e knife vcloud network list and knife vcloud image list
+
 Additionally the following options may be set in your `knife.rb`:
 
-* image
 * distro
 * template_file
 
