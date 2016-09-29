@@ -16,6 +16,6 @@ Gem::Specification.new do |s|
   s.files = %w(LICENSE README.md) + Dir.glob("lib/**/*")
 
   s.add_dependency "fog", ">= 1.10.1"
-  s.add_dependency "chef", ">= 10.10"
+  s.add_dependency "chef", ">= 12"
   s.add_dependency "knife-windows"
 end
