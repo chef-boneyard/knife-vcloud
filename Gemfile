@@ -6,5 +6,6 @@ group :development do
   gem 'rspec', '>= 2.7.0'
   gem 'rspec_junit_formatter'
   gem 'mixlib-shellout'
-  gem 'active_support'
+  gem 'activesupport'
+  gem 'em-winrm'
 end
