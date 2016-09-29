@@ -1,3 +1,7 @@
+= DEPRECATED
+
+VMware vCloud as a product has been deprecated. This plugin is now deprecated.
+
 = Knife vcloud
 
 = DESCRIPTION:
