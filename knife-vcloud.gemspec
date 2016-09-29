@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.description = s.summary
   s.author = "Chirag Jog"
   s.email = "chirag@clogeny.com"
-  s.homepage = "http://wiki.opscode.com/display/chef"
+  s.homepage = "https://www.chef.io"
   s.require_path = 'lib'
   s.files = %w(LICENSE README.md) + Dir.glob("lib/**/*")
 
