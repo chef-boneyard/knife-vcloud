@@ -14,7 +14,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-require 'fog'
+require "fog"
 class Chef
   class Knife
     module VcloudBase
@@ -24,8 +24,8 @@ class Chef
         includer.class_eval do
 
           deps do
-            require 'chef/knife'
-            require 'chef/json_compat'
+            require "chef/knife"
+            require "chef/json_compat"
             Chef::Knife.load_deps
           end
 
@@ -68,9 +68,9 @@ class Chef
             :vcloud_username => locate_config_value(:vcloud_username),
             :vcloud_password => locate_config_value(:vcloud_password),
             :vcloud_host => locate_config_value(:vcloud_host),
-            :vcloud_version => '1.5',
+            :vcloud_version => "1.5",
             :connection_options => {
-              :ssl_verify_peer=>locate_config_value(:verify_ssl_cert),
+              :ssl_verify_peer => locate_config_value(:verify_ssl_cert),
               :connect_timeout => 200,
               :read_timeout => 200,
             }
@@ -83,22 +83,22 @@ class Chef
         Chef::Config[:knife][key] || config[key]
       end
 
-      def msg_pair(label, value, color=:cyan)
+      def msg_pair(label, value, color = :cyan)
         if value && !value.to_s.empty?
           puts "#{ui.color(label, color)}: #{value}"
         end
       end
 
-      def validate!(keys=[:vcloud_username, :vcloud_password, :vcloud_host])
+      def validate!(keys = [:vcloud_username, :vcloud_password, :vcloud_host])
         errors = []
         keys.each do |k|
-          pretty_key = k.to_s.gsub(/_/, ' ').gsub(/\w+/){ |w| (w =~ /(ssh)/i) ? w.upcase  : w.capitalize }
+          pretty_key = k.to_s.tr("_", " ").gsub(/\w+/) { |w| (w =~ /(ssh)/i) ? w.upcase : w.capitalize }
           if locate_config_value(k).nil?
             errors << "You did not provide a valid '#{pretty_key}' value. Please set knife[:#{k}] in your knife.rb or pass as an option."
           end
         end
 
-        if errors.each{|e| ui.error(e)}.any?
+        if errors.each { |e| ui.error(e) }.any?
           exit 1
         end
       end
@@ -106,4 +106,3 @@ class Chef
     end
   end
 end
-

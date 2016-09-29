@@ -15,13 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-require 'chef/knife/vcloud_base'
+require "chef/knife/vcloud_base"
 
-require 'fog'
-require 'highline'
-require 'chef/knife'
-require 'chef/json_compat'
-require 'tempfile'
+require "fog"
+require "highline"
+require "chef/knife"
+require "chef/json_compat"
+require "tempfile"
 
 class Chef
   class Knife
@@ -38,11 +38,11 @@ class Chef
         validate!
         $stdout.sync = true
 
-        images_list = [ h.color('ID', :bold), h.color('Name', :bold), h.color('Type', :bold) ]
+        images_list = [ h.color("ID", :bold), h.color("Name", :bold), h.color("Type", :bold) ]
         #There are two types of Catalog - Private and Public. Each of which contains images(catalog items)
         connection.catalogs.each do |catalog|
           catalog.catalog_items.each do |catalog_item|
-            images_list << catalog_item.href.split('/').last.to_s
+            images_list << catalog_item.href.split("/").last.to_s
             images_list << catalog_item.name.to_s
             images_list << catalog.name.to_s
           end

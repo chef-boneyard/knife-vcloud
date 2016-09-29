@@ -14,11 +14,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-require 'fog'
-require 'chef/knife/vcloud_base'
-require 'highline'
-require 'chef/knife'
-
+require "fog"
+require "chef/knife/vcloud_base"
+require "highline"
+require "chef/knife"
 
 class Chef
   class Knife
@@ -28,14 +27,14 @@ class Chef
       include Chef::Knife::WinrmBase
 
       deps do
-        require 'chef/knife/winrm_base'
-        require 'winrm'
-        require 'em-winrm'
-        require 'chef/json_compat'
-        require 'chef/knife/bootstrap'
-        require 'chef/knife/bootstrap_windows_winrm'
-        require 'chef/knife/core/windows_bootstrap_context'
-        require 'chef/knife/winrm'
+        require "chef/knife/winrm_base"
+        require "winrm"
+        require "em-winrm"
+        require "chef/json_compat"
+        require "chef/knife/bootstrap"
+        require "chef/knife/bootstrap_windows_winrm"
+        require "chef/knife/core/windows_bootstrap_context"
+        require "chef/knife/winrm"
         Chef::Knife::Bootstrap.load_deps
       end
 
@@ -135,10 +134,10 @@ class Chef
       rescue Errno::EHOSTUNREACH
         sleep 2
         false
-     rescue Errno::ENETUNREACH
+      rescue Errno::ENETUNREACH
         sleep 2
         false
-     rescue Errno::ECONNRESET
+      rescue Errno::ECONNRESET
         sleep 2
         false
       ensure
@@ -179,24 +178,24 @@ class Chef
             :name =>  locate_config_value(:chef_node_name),
             :catalog_item_uri => nil,
             :password => nil,
-            :network_uri => nil
+            :network_uri => nil,
         }
         connection.catalogs.each do |catalog|
-            catalog_item = catalog.catalog_items.find{|item| item.href.include?(locate_config_value(:image)) }
-            if catalog_item
-              server_spec[:catalog_item_uri] = catalog_item.href
-              server_spec[:password] = config[:password] if catalog_item.password_enabled?
-              break
-            end
+          catalog_item = catalog.catalog_items.find { |item| item.href.include?(locate_config_value(:image)) }
+          if catalog_item
+            server_spec[:catalog_item_uri] = catalog_item.href
+            server_spec[:password] = config[:password] if catalog_item.password_enabled?
+            break
+          end
         end
 
         if server_spec[:catalog_item_uri].nil?
-            ui.error("Cannot find Image in the Catalog: #{locate_config_value(:image)}")
-            exit 1
+          ui.error("Cannot find Image in the Catalog: #{locate_config_value(:image)}")
+          exit 1
         end
 
-        network = connection.networks.all.find {|n|
-          n.href.scan(locate_config_value(:vcloud_network)).size > 0 }
+        network = connection.networks.all.find do |n|
+          n.href.scan(locate_config_value(:vcloud_network)).size > 0 end
         if network.nil?
           ui.error("Cannot find network : #{locate_config_value(:vcloud_network)}")
           exit 1
@@ -216,7 +215,7 @@ class Chef
 
         #Fetch the associated VM information for further configuration
         server = connection.get_server(vapp.children[:href])
-        server.network={:network_name => network.name, :network_mode => "POOL" }
+        server.network = { :network_name => network.name, :network_mode => "POOL" }
         server.save
 
         if server_spec[:password].nil?
@@ -260,19 +259,19 @@ class Chef
           exit 0
         end
 
-        if locate_config_value(:bootstrap_protocol) == 'winrm'
+        if locate_config_value(:bootstrap_protocol) == "winrm"
           print "\n#{ui.color("Waiting for winrm", :magenta)}"
-          print(".") until tcp_test_winrm(public_ip_address, locate_config_value(:winrm_port)) {
+          print(".") until tcp_test_winrm(public_ip_address, locate_config_value(:winrm_port)) do
             sleep @initial_sleep_delay ||= 10
             puts("done")
-          }
+          end
           bootstrap_for_windows_node(server, public_ip_address).run
         else
           print "\n#{ui.color("Waiting for sshd", :magenta)}"
-          print(".") until tcp_test_ssh(public_ip_address) {
+          print(".") until tcp_test_ssh(public_ip_address) do
             sleep @initial_sleep_delay ||= 10
             puts("done")
-          }
+          end
           bootstrap_for_node(server, public_ip_address).run
         end
       end
@@ -287,7 +286,7 @@ class Chef
       def bootstrap_for_windows_node(server, fqdn)
         bootstrap = Chef::Knife::BootstrapWindowsWinrm.new
         bootstrap.name_args = [fqdn]
-        bootstrap.config[:winrm_user] = locate_config_value(:winrm_user) || 'Administrator'
+        bootstrap.config[:winrm_user] = locate_config_value(:winrm_user) || "Administrator"
         bootstrap.config[:winrm_password] = locate_config_value(:winrm_password)
         bootstrap.config[:winrm_transport] = locate_config_value(:winrm_transport)
         bootstrap.config[:winrm_port] = locate_config_value(:winrm_port)
@@ -307,7 +306,7 @@ class Chef
         bootstrap.config[:encrypted_data_bag_secret_file] = config[:encrypted_data_bag_secret_file]
         # let ohai know we're using vCD
         Chef::Config[:knife][:hints] ||= {}
-        Chef::Config[:knife][:hints]['vcloud'] ||= {}
+        Chef::Config[:knife][:hints]["vcloud"] ||= {}
         bootstrap
       end
 
@@ -317,7 +316,7 @@ class Chef
         bootstrap.config[:ssh_user] = locate_config_value(:ssh_user) || "root"
         bootstrap.config[:ssh_password] = locate_config_value(:ssh_password)
         bootstrap.config[:chef_node_name] = locate_config_value(:chef_node_name) || server.name
-        bootstrap.config[:use_sudo] = true unless locate_config_value(:ssh_user) == 'root'
+        bootstrap.config[:use_sudo] = true unless locate_config_value(:ssh_user) == "root"
         bootstrap_common_params(bootstrap)
       end
     end

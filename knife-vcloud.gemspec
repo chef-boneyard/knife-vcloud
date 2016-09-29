@@ -1,8 +1,8 @@
-$:.unshift(File.dirname(__FILE__) + '/lib')
-require 'knife-vcloud/version'
+$:.unshift(File.dirname(__FILE__) + "/lib")
+require "knife-vcloud/version"
 
 Gem::Specification.new do |s|
-  s.name = 'knife-vcloud'
+  s.name = "knife-vcloud"
   s.version = KnifeVCloud::VERSION
   s.platform = Gem::Platform::RUBY
   s.has_rdoc = true
@@ -12,8 +12,8 @@ Gem::Specification.new do |s|
   s.author = "Chirag Jog"
   s.email = "chirag@clogeny.com"
   s.homepage = "https://www.chef.io"
-  s.require_path = 'lib'
-  s.files = %w(LICENSE README.md) + Dir.glob("lib/**/*")
+  s.require_path = "lib"
+  s.files = %w{LICENSE README.md} + Dir.glob("lib/**/*")
 
   s.add_dependency "fog", ">= 1.10.1"
   s.add_dependency "chef", ">= 12"
