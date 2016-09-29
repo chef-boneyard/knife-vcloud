@@ -15,7 +15,7 @@
 
 # Author:: Ameya Varade (<ameya.varade@clogeny.com>)
 
-require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
+require File.expand_path(File.dirname(__FILE__) + "/../spec_helper")
 
 def init_test
   #We may not need knife.rb for now but we might need while writing create, list, delete test cases.
@@ -31,69 +31,69 @@ def cleanup_test_data
 end
 
 def get_gem_file_name
-	"knife-vcloud-" + KnifeVCloud::VERSION + ".gem"
+  "knife-vcloud-" + KnifeVCloud::VERSION + ".gem"
 end
 
-describe 'knife-vcloud' do
+describe "knife-vcloud" do
   include RSpec::KnifeUtils
   before(:all) { init_test }
   after(:all) { cleanup_test_data }
-  context 'gem' do
-    context 'build' do
+  context "gem" do
+    context "build" do
       let(:command) { "gem build knife-vcloud.gemspec" }
-      it 'should succeed' do
+      it "should succeed" do
         match_status("should succeed")
       end
     end
 
-    context 'install ' do
-      let(:command) { "gem install " + get_gem_file_name  } 
-      it 'should succeed' do
+    context "install " do
+      let(:command) { "gem install " + get_gem_file_name }
+      it "should succeed" do
         match_status("should succeed")
       end
     end
 
-    describe 'knife' do
-      context 'vcloud' do
-        context 'image list --help' do
-         let(:command) { "knife vcloud image list --help" } 
-           it 'should succeed' do
+    describe "knife" do
+      context "vcloud" do
+        context "image list --help" do
+          let(:command) { "knife vcloud image list --help" }
+          it "should succeed" do
             should have_outcome :stdout => /--help/
           end
         end
-        context 'network list --help' do
-         let(:command) { "knife vcloud network list --help" } 
-           it 'should succeed' do
-            should have_outcome :stdout => /--help/
-          end
-        end
-
-        context 'server create --help' do
-         let(:command) { "knife vcloud server create --help" } 
-           it 'should succeed' do
+        context "network list --help" do
+          let(:command) { "knife vcloud network list --help" }
+          it "should succeed" do
             should have_outcome :stdout => /--help/
           end
         end
 
-        context 'server delete --help' do
-         let(:command) { "knife vcloud server delete --help" } 
-           it 'should succeed' do
+        context "server create --help" do
+          let(:command) { "knife vcloud server create --help" }
+          it "should succeed" do
             should have_outcome :stdout => /--help/
           end
         end
 
-        context 'server list --help' do
-         let(:command) { "knife vcloud server list --help" } 
-           it 'should succeed' do
+        context "server delete --help" do
+          let(:command) { "knife vcloud server delete --help" }
+          it "should succeed" do
             should have_outcome :stdout => /--help/
           end
         end
-      end      
+
+        context "server list --help" do
+          let(:command) { "knife vcloud server list --help" }
+          it "should succeed" do
+            should have_outcome :stdout => /--help/
+          end
+        end
+      end
     end
 
-    context 'uninstall ' do
+    context "uninstall " do
       let(:command) { "gem uninstall knife-vcloud -v '#{KnifeVCloud::VERSION}'" }
-      it 'should succeed' do
+      it "should succeed" do
         match_status("should succeed")
       end
     end

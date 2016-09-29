@@ -16,10 +16,10 @@
 # limitations under the License.
 #
 
-require File.expand_path('../../spec_helper', __FILE__)
-require 'fog'
-require 'chef/knife/bootstrap'
-require 'chef/knife/bootstrap_windows_winrm'
+require File.expand_path("../../spec_helper", __FILE__)
+require "fog"
+require "chef/knife/bootstrap"
+require "chef/knife/bootstrap_windows_winrm"
 
 describe Chef::Knife::VcloudServerCreate do
   before do
@@ -27,13 +27,13 @@ describe Chef::Knife::VcloudServerCreate do
     @knife_vcloud_create.stub!(:tcp_test_ssh).and_return(true)
     @knife_vcloud_create.stub!(:tcp_test_winrm).and_return(true)
     {
-      :image => 'image',
-      :vcloud_password => 'vcloud_password',
-      :vcloud_username => 'vcloud_username',
-      :vcloud_host => 'vcloud_host',
-      :vcloud_network => 'vcloud_network',
-      :chef_node_name => 'chef_node_name',
-      :ssh_password => 'password'
+      :image => "image",
+      :vcloud_password => "vcloud_password",
+      :vcloud_username => "vcloud_username",
+      :vcloud_host => "vcloud_host",
+      :vcloud_network => "vcloud_network",
+      :chef_node_name => "chef_node_name",
+      :ssh_password => "password",
     }.each do |key, value|
       @knife_vcloud_create.config[key] = value
     end
@@ -47,13 +47,13 @@ describe Chef::Knife::VcloudServerCreate do
     @network = double(:name => "network", :href => "vcloud_network")
     @vcloud_connection.stub_chain(:networks, :all, :find).and_return { @network }
     @vcloud_vapps = mock()
-    @new_vapp = double(:name => "name", :href => "vapp", :children => {:href => "children"})
+    @new_vapp = double(:name => "name", :href => "vapp", :children => { :href => "children" })
     @new_server = double(
       :id => "id",
-      :network => {:network_name => "vcloud_network", :network_mode => "POOL" },
-      :password => 'password',
-      :cpus => 'cpus',
-      :memory => 'memory'
+      :network => { :network_name => "vcloud_network", :network_mode => "POOL" },
+      :password => "password",
+      :cpus => "cpus",
+      :memory => "memory"
     )
   end
 
@@ -81,10 +81,10 @@ describe Chef::Knife::VcloudServerCreate do
 
     it "creates an vapp with non-default CPU/Memory" do
       # Fog::Vcloud::Compute.should_receive(:new).and_return(@vcloud_connection)
-      @new_network = {:IpAddress => "IpAddress"}
+      @new_network = { :IpAddress => "IpAddress" }
       @new_server.stub(:network).and_return(@new_network)
-      @knife_vcloud_create.config[:vcpus] = 'vcpus'
-      @knife_vcloud_create.config[:memory] = 'memory'
+      @knife_vcloud_create.config[:vcpus] = "vcpus"
+      @knife_vcloud_create.config[:memory] = "memory"
       @new_server.should_receive(:cpus=).and_return(@new_server.cpus)
       @new_server.should_receive(:memory=).and_return(@new_server.memory)
       @new_server.should_receive(:save).exactly(3).times
@@ -98,7 +98,7 @@ describe Chef::Knife::VcloudServerCreate do
     it "should bootstrap windows when bootstrap protocol is winrm" do
       # Fog::Vcloud::Compute.should_receive(:new).and_return(@vcloud_connection)
       @new_server.should_receive(:save)
-      @knife_vcloud_create.config[:bootstrap_protocol] = 'winrm'
+      @knife_vcloud_create.config[:bootstrap_protocol] = "winrm"
       @bootstrap = Chef::Knife::BootstrapWindowsWinrm.new
       Chef::Knife::BootstrapWindowsWinrm.stub(:new).and_return(@bootstrap)
       @bootstrap.should_receive(:run)
@@ -107,8 +107,8 @@ describe Chef::Knife::VcloudServerCreate do
 
     it "should set the password on server if the image is not password enabled" do
       Fog::Vcloud::Compute.stub(:new).and_return(@vcloud_connection)
-      @catalog_items[0] =double(:href => "image", :password_enabled? => false)
-      @new_network = {:IpAddress => "IpAddress"}
+      @catalog_items[0] = double(:href => "image", :password_enabled? => false)
+      @new_network = { :IpAddress => "IpAddress" }
       @new_server.stub(:network).and_return(@new_network)
       @new_server.should_receive(:password=)
       @new_server.should_receive(:save).twice
@@ -124,7 +124,7 @@ describe Chef::Knife::VcloudServerCreate do
       @knife_vcloud_create.config[:no_bootstrap] = true
       @bootstrap = Chef::Knife::Bootstrap.new
       @bootstrap.should_not_receive(:run)
-      lambda  { @knife_vcloud_create.run }.should raise_error SystemExit
+      lambda { @knife_vcloud_create.run }.should raise_error SystemExit
     end
 
   end
@@ -132,13 +132,13 @@ describe Chef::Knife::VcloudServerCreate do
     before do
       @knife_vcloud_create.ui.stub(:error)
     end
-    it 'should fail if compulsory params - image are not set' do
+    it "should fail if compulsory params - image are not set" do
       @knife_vcloud_create.config[:image] = nil
-      lambda  { @knife_vcloud_create.run }.should raise_error SystemExit
+      lambda { @knife_vcloud_create.run }.should raise_error SystemExit
     end
-    it 'should fail if compulsory params - network are not set' do
+    it "should fail if compulsory params - network are not set" do
       @knife_vcloud_create.config[:vcloud_network] = nil
-      lambda  { @knife_vcloud_create.run }.should raise_error SystemExit
+      lambda { @knife_vcloud_create.run }.should raise_error SystemExit
     end
 
   end
@@ -146,9 +146,9 @@ describe Chef::Knife::VcloudServerCreate do
     before do
       @knife_vcloud_create.config[:ssh_user] = "ubuntu"
       @knife_vcloud_create.config[:chef_node_name] = "blarf"
-      @knife_vcloud_create.config[:template_file] = '~/.chef/templates/my-bootstrap.sh.erb'
-      @knife_vcloud_create.config[:distro] = 'ubuntu-10.04-magic-sparkles'
-      @knife_vcloud_create.config[:run_list] = ['role[base]']
+      @knife_vcloud_create.config[:template_file] = "~/.chef/templates/my-bootstrap.sh.erb"
+      @knife_vcloud_create.config[:distro] = "ubuntu-10.04-magic-sparkles"
+      @knife_vcloud_create.config[:run_list] = ["role[base]"]
       @knife_vcloud_create.config[:json_attributes] = "{'my_attributes':{'foo':'bar'}"
       @knife_vcloud_create.config[:bootstrap_protocol] = nil
 
@@ -158,15 +158,15 @@ describe Chef::Knife::VcloudServerCreate do
     end
 
     it "configures sets the bootstrap's run_list" do
-      @bootstrap.config[:run_list].should == ['role[base]']
+      @bootstrap.config[:run_list].should == ["role[base]"]
     end
 
     it "configures the bootstrap to use the correct ssh_user login" do
-      @bootstrap.config[:ssh_user].should == 'ubuntu'
+      @bootstrap.config[:ssh_user].should == "ubuntu"
     end
 
     it "configures the bootstrap to use the configured node name if provided" do
-      @bootstrap.config[:chef_node_name].should == 'blarf'
+      @bootstrap.config[:chef_node_name].should == "blarf"
     end
 
     it "configures the bootstrap to use the vcloud server name if no explicit node name is set" do
@@ -186,7 +186,7 @@ describe Chef::Knife::VcloudServerCreate do
     end
 
     it "configures the bootstrap to use the desired distro-specific bootstrap script" do
-      @bootstrap.config[:distro].should == 'ubuntu-10.04-magic-sparkles'
+      @bootstrap.config[:distro].should == "ubuntu-10.04-magic-sparkles"
     end
 
     it "configures the bootstrap to use sudo" do
@@ -194,7 +194,7 @@ describe Chef::Knife::VcloudServerCreate do
     end
 
     it "configured the bootstrap to use the desired template" do
-      @bootstrap.config[:template_file].should == '~/.chef/templates/my-bootstrap.sh.erb'
+      @bootstrap.config[:template_file].should == "~/.chef/templates/my-bootstrap.sh.erb"
     end
 
     it "configured the bootstrap to set an vcloud hint (via Chef::Config)" do

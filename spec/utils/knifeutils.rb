@@ -1,12 +1,12 @@
-require 'active_support/concern'
-require 'mixlib/shellout'
+require "active_support/concern"
+require "mixlib/shellout"
 module RSpec
-  module KnifeUtils    
+  module KnifeUtils
     extend ActiveSupport::Concern
     included do
       subject { knife_run }
       let(:knife_run) { run command }
-      let(:command)   { fail 'Define let(:command) in the spec' }
+      let(:command)   { raise "Define let(:command) in the spec" }
       let(:cmd_stdout) { @op }
 
       # Convenience method for actually running a knife command in our
@@ -14,7 +14,7 @@ module RSpec
       # inspection.
       def run(command_line)
         shell_out = Mixlib::ShellOut.new("#{command_line}")
-        @op = shell_out.tap(&:run_command).stdout        
+        @op = shell_out.tap(&:run_command).stdout
         return shell_out
       end
 

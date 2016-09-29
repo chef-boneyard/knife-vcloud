@@ -15,12 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-require 'chef/knife/vcloud_base'
-require 'fog'
-require 'highline'
-require 'chef/knife'
-require 'chef/json_compat'
-require 'tempfile'
+require "chef/knife/vcloud_base"
+require "fog"
+require "highline"
+require "chef/knife"
+require "chef/json_compat"
+require "tempfile"
 
 class Chef
   class Knife
@@ -38,20 +38,20 @@ class Chef
         validate!
 
         server_list = [
-            h.color('ID', :bold),
-            h.color('Name', :bold),
-            h.color('Password', :bold),
-            h.color('PublicIP', :bold),
-            h.color('PrivateIP', :bold),
-            h.color('OperatingSystem', :bold)
+            h.color("ID", :bold),
+            h.color("Name", :bold),
+            h.color("Password", :bold),
+            h.color("PublicIP", :bold),
+            h.color("PrivateIP", :bold),
+            h.color("OperatingSystem", :bold),
 
         ]
         vapps = connection.vapps.all
         #Fetch each VM (server) info from each vApp available
         if vapps
-          for vapp in vapps
+          vapps.each do |vapp|
             vapp.servers.all.each do |server|
-              server_list << vapp.href.split('/').last
+              server_list << vapp.href.split("/").last
               server_list << vapp.name.to_s
               server_list << server.password.to_s
               server_list << server.network[:IpAddress].to_s

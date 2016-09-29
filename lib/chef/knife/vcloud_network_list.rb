@@ -15,13 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-require 'chef/knife/vcloud_base'
+require "chef/knife/vcloud_base"
 
-require 'fog'
-require 'highline'
-require 'chef/knife'
-require 'chef/json_compat'
-require 'tempfile'
+require "fog"
+require "highline"
+require "chef/knife"
+require "chef/json_compat"
+require "tempfile"
 
 class Chef
   class Knife
@@ -38,12 +38,12 @@ class Chef
         validate!
         $stdout.sync = true
 
-        network_list = [ h.color('ID', :bold), h.color('Name', :bold), h.color('Mode', :bold) ]
+        network_list = [ h.color("ID", :bold), h.color("Name", :bold), h.color("Mode", :bold) ]
         connection.networks.each do |network|
-            net_info = connection.get_network(network.href)
-            network_list << net_info.href.split('/').last.to_s
-            network_list << net_info.name.to_s
-            network_list << net_info.configuration[:FenceMode].to_s
+          net_info = connection.get_network(network.href)
+          network_list << net_info.href.split("/").last.to_s
+          network_list << net_info.name.to_s
+          network_list << net_info.configuration[:FenceMode].to_s
         end
         puts h.list(network_list, :columns_across, 3)
       end
