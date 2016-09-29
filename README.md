@@ -73,6 +73,10 @@ Outputs a list of all available images available to the currently configured vcl
 
 Outputs a list of all available networks to the currently configured vcloud Cloud account. A network can be a Org or vApp level network. This data can be useful when choosing a network id to pass to the **knife vcloud server create** subcommand.
 
+## Contributing
+
+For information on contributing to this project see <https://github.com/chef/chef/blob/master/CONTRIBUTING.md>
+
 ## License
 
 Author:: Chirag Jog ([chirag@clogeny.com](mailto:chirag@clogeny.com))
